@@ -3,61 +3,73 @@ from neo4j import GraphDatabase
 class DatabaseHandler(object):
     def __init__(self, uri, user, password):
         self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/'
+        self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/drupal/'
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
 
     def close(self):
         self._driver.close()
 
+##############################################################################
+    def create_node_statement(self, x='x', indent=0):
+        return \
+            '\t'*indent + 'MERGE (node:node{\n' + \
+            '\t'*indent + '\tnid: toInteger(' + x + '.nid),\n' + \
+            '\t'*indent + '\tvid: toInteger(' + x + '.vid),\n' + \
+            '\t'*indent + '\ttype: ' + x + '.type,\n' + \
+            '\t'*indent + '\ttitle: ' + x + '.title,\n' + \
+            '\t'*indent + '\tlanguage: ' + x + '.language,\n' + \
+            '\t'*indent + '\tuid: toInteger(' + x + '.uid),\n' + \
+            '\t'*indent + '\tstatus: toInteger(' + x + '.status),\n' + \
+            '\t'*indent + '\tcreated: toInteger(' + x + '.created),\n' + \
+            '\t'*indent + '\tchanged: toInteger(' + x + '.changed),\n' + \
+            '\t'*indent + '\tcomment: toInteger(' + x + '.comment),\n' + \
+            '\t'*indent + '\tpromote: toInteger(' + x + '.promote),\n' + \
+            '\t'*indent + '\tsticky: toInteger(' + x + '.sticky),\n' + \
+            '\t'*indent + '\ttnid: toInteger(' + x + '.tnid),\n' + \
+            '\t'*indent + '\ttranslate: toInteger(' + x + '.translate)\n' + \
+            '\t'*indent + '})'
+
+    def load_node_statement(self,x = 'x'):
+        return '''
+            LOAD CSV WITH HEADERS FROM '{dir}node.csv' AS {x}'''.format(dir=self.database_dir, x=x) + self.create_node_statement(x) + '''
+            RETURN node
+        '''
+
     def load_nodes(self):
         try:
             with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(
-                    "USING PERIODIC COMMIT 500 "
-                    "LOAD CSV WITH HEADERS FROM 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/node.csv' AS x "
-                    "MERGE (node:node{ "
-                        "nid: toInteger(x.nid), "
-                        "vid: toInteger(x.vid), "
-                        "type: x.type, "
-                        "title: x.title, "
-                        "language: x.language, "
-                        "uid: toInteger(x.uid), "
-                        "status: toInteger(x.status), "
-                        "created: toInteger(x.created), "
-                        "changed: toInteger(x.changed), "
-                        "comment: toInteger(x.comment), "
-                        "promote: toInteger(x.promote), "
-                        "sticky: toInteger(x.sticky), "
-                        "tnid: toInteger(x.tnid), "
-                        "translate: toInteger(x.translate) "
-                    "}) "
-                    "return x "
-                ))
+                session.write_transaction(lambda tx: tx.run(self.load_node_statement()))
             print('Nodes Successful Loaded')
             return True
         except Exception as e:
             print(e)
         return False
+#############################################################################
+    def create_field_collection_item_statement(self, x='x'):
+        return '''
+            MERGE (node:field_collection_item{start}
+                item_id: toInteger({x}.item_id),
+                revision_id: toInteger({x}.revision_id),
+                field_name: {x}.field_name,
+                archived: toInteger({x}.archived)
+            {end})'''.format(start='{', end='}', x=x)
 
+    def load_fields_collection_item_statement(self, x='x'):
+        return '''
+            LOAD CSV WITH HEADERS FROM '{dir}field_collection_item.csv' AS {x}'''.format(dir=self.database_dir, x=x) + self.create_field_collection_item_statement(x) + '''
+            RETURN node
+        '''
+    
     def load_fields_collection_item(self):
         try:
             with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(
-                    "USING PERIODIC COMMIT 500 "
-                    "LOAD CSV WITH HEADERS FROM 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/field_collection_item.csv' AS x "
-                    "MERGE (node:field_collection_item{ "
-                        "item_id: toInteger(x.item_id), "
-                        "revision_id: toInteger(x.revision_id), "
-                        "field_name: x.field_name, "
-                        "archived: toInteger(x.archived) "
-                    "}) "
-                    "return node "
-                ))
+                session.write_transaction(lambda tx: tx.run(self.load_fields_collection_item_statement()))
             print('Field Collection Item Successful Loaded')
             return True
         except Exception as e:
             print(e)
         return False
-
+##############################################################################
     def load_taxonomy_term(self):
         try:
             with self._driver.session() as session:
