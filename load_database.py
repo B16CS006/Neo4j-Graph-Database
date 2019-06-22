@@ -3,7 +3,7 @@ from neo4j import GraphDatabase
 class DatabaseHandler(object):
     def __init__(self, uri, user, password):
         self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/'
-        self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/drupal/'
+        self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/database/drupal/'
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
 
     def close(self):
@@ -29,11 +29,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\ttranslate: toInteger(' + x + '.translate)\n' + \
             '\t'*indent + '})'
 
-    def load_node_statement(self,x = 'x'):
-        return '''
-            LOAD CSV WITH HEADERS FROM '{dir}node.csv' AS {x}'''.format(dir=self.database_dir, x=x) + self.create_node_statement(x) + '''
-            RETURN node
-        '''
+    def load_node_statement(self,x = 'x', indent=0):
+        return \
+            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'node.csv\' AS ' + x + '\n' + \
+            self.create_node_statement(x, indent=indent) + '\n' + \
+            '\t'*indent + 'RETURN node'
 
     def load_nodes(self):
         try:
