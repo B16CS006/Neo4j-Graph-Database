@@ -1,18 +1,24 @@
 from neo4j import GraphDatabase
 
 class DatabaseHandler(object):
-    def __init__(self, uri, user, password):
-        self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/'
-        self.database_dir = 'file:///home/krrishna/Workspace/NPBridge/database/drupal/'
+    def __init__(self, uri, user, password, dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'):
+        self.__change_dir__(dir)
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
 
     def close(self):
         self._driver.close()
 
-##############################################################################
-    def create_node_statement(self, x='x', indent=0):
+    def __change_dir__(self, dir):
+        self.database_dir = dir
+
+################################## Load Nodes ############################################################
+    def node_load_csv(self, x='x', indent=0):
+        return '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'node.csv\' AS ' + x
+
+
+    def node_merge_statement(self, x='x', indent=0, node='node'):
         return \
-            '\t'*indent + 'MERGE (node:node{\n' + \
+            '\t'*indent + 'MERGE (node:' + node + '{\n' + \
             '\t'*indent + '\tnid: toInteger(' + x + '.nid),\n' + \
             '\t'*indent + '\tvid: toInteger(' + x + '.vid),\n' + \
             '\t'*indent + '\ttype: ' + x + '.type,\n' + \
@@ -29,11 +35,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\ttranslate: toInteger(' + x + '.translate)\n' + \
             '\t'*indent + '})'
 
-    def load_node_statement(self,x = 'x', indent=0):
+    def load_node_statement(self,x = 'x', indent=0, node='node'):
         return \
-            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'node.csv\' AS ' + x + '\n' + \
-            self.create_node_statement(x, indent=indent) + '\n' + \
-            '\t'*indent + 'RETURN node'
+            self.node_load_csv(x, indent, node) + '\n' + \
+            self.node_merge_statement(x, indent, node) + '\n' + \
+            '\t'*indent + 'RETURN ' + node
 
     def load_nodes(self):
         try:
@@ -44,37 +50,51 @@ class DatabaseHandler(object):
         except Exception as e:
             print(e)
         return False
-#############################################################################
-    def create_field_collection_item_statement(self, x='x'):
-        return '''
-            MERGE (node:field_collection_item{start}
-                item_id: toInteger({x}.item_id),
-                revision_id: toInteger({x}.revision_id),
-                field_name: {x}.field_name,
-                archived: toInteger({x}.archived)
-            {end})'''.format(start='{', end='}', x=x)
+########################### Load Field Collection Item ###################################################
+    def create_field_collection_item_statement(self, x='x', indent=0, node='node'):
+        return \
+            '\t'*indent + 'MERGE (' + node + ':field_collection_item{\n' + \
+            '\t'*indent + '\titem_id: toInteger(' + x + '.item_id),\n' + \
+            '\t'*indent + '\trevision_id: toInteger(' + x + '.revision_id),\n' + \
+            '\t'*indent + '\tfield_name: ' + x + '.field_name,\n' + \
+            '\t'*indent + '\tarchived: toInteger(' + x + '.archived)\n' + \
+            '\t'*indent + '})'
 
-    def load_fields_collection_item_statement(self, x='x'):
-        return '''
-            LOAD CSV WITH HEADERS FROM '{dir}field_collection_item.csv' AS {x}'''.format(dir=self.database_dir, x=x) + self.create_field_collection_item_statement(x) + '''
-            RETURN node
-        '''
+    def load_field_collection_item_statement(self, x='x', indent=0, node='node'):
+        return \
+            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'field_collection_item.csv\' AS ' + x + '\n' + \
+            self.create_field_collection_item_statement(x, indent, node) + '\n' + \
+            '\t'*indent + 'RETURN ' + node
     
-    def load_fields_collection_item(self):
+    def load_field_collection_item(self):
         try:
             with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(self.load_fields_collection_item_statement()))
+                session.write_transaction(lambda tx: tx.run(self.load_field_collection_item_statement()))
             print('Field Collection Item Successful Loaded')
             return True
         except Exception as e:
             print(e)
         return False
-##############################################################################
+############################### Load Taxonomy Term #######################################################
+    def create_taxonomy_term_statement(self, x='x', indent=0, node='node'):
+        return \
+            '\t'*indent + 'MERGE (' + node + ':field_collection_item{\n' + \
+            '\t'*indent + '\titem_id: toInteger(' + x + '.item_id),\n' + \
+            '\t'*indent + '\trevision_id: toInteger(' + x + '.revision_id),\n' + \
+            '\t'*indent + '\tfield_name: ' + x + '.field_name,\n' + \
+            '\t'*indent + '\tarchived: toInteger(' + x + '.archived)\n' + \
+            '\t'*indent + '})'
+
+    def load_taxonomy_term_statement(self, x='x', indent=0, node='node'):
+        return \
+            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'field_collection_item.csv\' AS ' + x + '\n' + \
+            self.create_field_collection_item_statement(x, indent, node) + '\n' + \
+            '\t'*indent + 'RETURN ' + node
+
     def load_taxonomy_term(self):
         try:
             with self._driver.session() as session:
                 session.write_transaction(lambda tx: tx.run(
-                    "USING PERIODIC COMMIT 500\n"
                     "LOAD CSV WITH HEADERS FROM 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/taxonomy_term_data.csv' AS x "
                     "MERGE (term:taxonomy_term{ "
                     "    tid: toInteger(x.tid), "
@@ -139,7 +159,7 @@ class DatabaseHandler(object):
     def load_database(self):
         try:
             self.load_nodes()
-            self.load_fields_collection_item()
+            self.load_field_collection_item()
             self.load_taxonomy_term()
             self.load_fields()
             print('Database succssfully Loaded')
