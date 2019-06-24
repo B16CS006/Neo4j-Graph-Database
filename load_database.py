@@ -183,7 +183,7 @@ class DatabaseHandler(object):
 
 ######################################################################################################################
 
-    def csv_load_node(self, header, x, indent=0, node='node'):
+    def csv_load_node(self, tx, header, x, indent=0, node='node'):
         statement = \
             '\t'*indent + 'MERGE (node:' + node + '{\n' + \
             '\t'*indent + '\tnid: toInteger("' + x[header.index('nid')] +'"),\n' + \
@@ -202,28 +202,34 @@ class DatabaseHandler(object):
             '\t'*indent + '\ttranslate: toInteger("' + x[header.index('translate')] +'")\n' + \
             '\t'*indent + '})'
 
+        # return tx.run(statement)
         return statement
 
     def csv_load_nodes(self, x='x', indent=0):
         try:
             with self._driver.session() as session:
-                tx = session.begin_transaction()
+                # tx = session.begin_transaction()
                 with open(self.database_dir + 'node.csv') as csv_file:
                     import csv
                     csv_reader = csv.reader(csv_file)
                     csv_header = []
                     for (index, row) in enumerate(csv_reader):
-                        print('index = ',index)
+                        # if (tx.closed()):
+                            # tx.session.begin_transaction()
+                        # while(tx.closed()):
+                            # print('closed')
+                        print(index, end=',')
                         if(index == 0):
                             csv_header = row
                             csv_header[0]=csv_header[0].replace('\ufeff', '')
                             continue
-                        statement = self.csv_load_node(csv_header, row)
+                        # session.writeTransaction
+                        # statement = self.csv_load_node(csv_header, row)
                         # print(statement)
-                        tx.run(statement)
-                        if(index % 500 == 0):
-                            tx.sync()
-                    tx.commit()
+                        session.write_transaction(lambda tx: tx.run(self.csv_load_node(tx, csv_header, row)))
+                        # if(index % 500 == 0):
+                            # break
+                    # tx.commit()
             print('Nodes Successful Loaded')
             return True
         except Exception as e:
