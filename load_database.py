@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 
 class DatabaseHandler(object):
-    def __init__(self, uri, user, password, dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'):
+    def __init__(self, uri, user, password, dir='../database/ngov2/'):
         self.__change_dir__(dir)
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
 
@@ -9,13 +9,10 @@ class DatabaseHandler(object):
         self._driver.close()
 
     def __change_dir__(self, dir):
-        self.database_dir = dir
+        self.database_dir = dir # dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'
+        return
 
 ################################## Load Nodes ############################################################
-    def node_load_csv(self, x='x', indent=0):
-        return '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'node.csv\' AS ' + x
-
-
     def node_merge_statement(self, x='x', indent=0, node='node'):
         return \
             '\t'*indent + 'MERGE (node:' + node + '{\n' + \
@@ -183,3 +180,58 @@ class DatabaseHandler(object):
         except Exception as e:
             print(e)
         return False
+
+######################################################################################################################
+
+    def csv_load_node(self, header, x, indent=0, node='node'):
+        statement = \
+            '\t'*indent + 'MERGE (node:' + node + '{\n' + \
+            '\t'*indent + '\tnid: toInteger("' + x[header.index('nid')] +'"),\n' + \
+            '\t'*indent + '\tvid: toInteger("' + x[header.index('vid')] +'"),\n' + \
+            '\t'*indent + '\ttype: "' + x[header.index('type')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\ttitle: "' + x[header.index('title')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tlanguage: "' + x[header.index('language')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tuid: toInteger("' + x[header.index('uid')] +'"),\n' + \
+            '\t'*indent + '\tstatus: toInteger("' + x[header.index('status')] +'"),\n' + \
+            '\t'*indent + '\tcreated: toInteger("' + x[header.index('created')] +'"),\n' + \
+            '\t'*indent + '\tchanged: toInteger("' + x[header.index('changed')] +'"),\n' + \
+            '\t'*indent + '\tcomment: toInteger("' + x[header.index('comment')] +'"),\n' + \
+            '\t'*indent + '\tpromote: toInteger("' + x[header.index('promote')] +'"),\n' + \
+            '\t'*indent + '\tsticky: toInteger("' + x[header.index('sticky')] +'"),\n' + \
+            '\t'*indent + '\ttnid: toInteger("' + x[header.index('tnid')] +'"),\n' + \
+            '\t'*indent + '\ttranslate: toInteger("' + x[header.index('translate')] +'")\n' + \
+            '\t'*indent + '})'
+
+        return statement
+
+    def csv_load_nodes(self, x='x', indent=0):
+        try:
+            with self._driver.session() as session:
+                tx = session.begin_transaction()
+                with open(self.database_dir + 'node.csv') as csv_file:
+                    import csv
+                    csv_reader = csv.reader(csv_file)
+                    csv_header = []
+                    for (index, row) in enumerate(csv_reader):
+                        print('index = ',index)
+                        if(index == 0):
+                            csv_header = row
+                            csv_header[0]=csv_header[0].replace('\ufeff', '')
+                            continue
+                        statement = self.csv_load_node(csv_header, row)
+                        # print(statement)
+                        tx.run(statement)
+                        if(index % 500 == 0):
+                            tx.sync()
+                    tx.commit()
+            print('Nodes Successful Loaded')
+            return True
+        except Exception as e:
+            print(e)
+        return False
+
+        # with driver.session() as session:
+        #     tx = session.begin_transaction()
+        #     node_id = create_person_node(tx)
+        #     set_person_name(tx, node_id, name)
+        #     tx.commit()
