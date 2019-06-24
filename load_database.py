@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 
 class DatabaseHandler(object):
-    def __init__(self, uri, user, password, dir='../database/drupal/'):
+    def __init__(self, uri, user, password, dir='../database/ngov2/'):
         self.__change_dir__(dir)
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
 
@@ -208,56 +208,56 @@ class DatabaseHandler(object):
         try:
             with open(self.database_dir + 'node.csv') as csv_file:
                 import csv, json
-                # csv_reader = csv.reader(csv_file)
-                reader = csv.DictReader( csv_file) # , fieldnames = ( 'nid', 'vid', 'type', 'language', 'title', 'uid', 'status', 'created', 'changed', 'comment', 'promote', 'sticky', 'tnid', 'translate', 'uuid' )
+                csv_reader = csv.reader(csv_file)
+                # reader = csv.DictReader( csv_file) # , fieldnames = ( 'nid', 'vid', 'type', 'language', 'title', 'uid', 'status', 'created', 'changed', 'comment', 'promote', 'sticky', 'tnid', 'translate', 'uuid' )
                 # out = json.dumps( [ row for row in reader ] )  
                 # print(out)
                 csv_header = []
 
-                for (index, row) in enumerate(reader):
+                for (index, row) in enumerate(csv_reader):
+                    print(index)
                     if(index == 0):
                         csv_header = row
                         csv_header[0]=csv_header[0].replace('\ufeff', '')
                         print(csv_header)
                         continue
+                    
                     with self._driver.session() as session:
                         session.write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
-
-                        break
                 return
 
-                for (index, row) in enumerate(csv_reader):
-                    if(index == 0):
-                        csv_header = row
-                        csv_header[0]=csv_header[0].replace('\ufeff', '')
-                        print(csv_header)
-                        continue
-                    rows.append(row)
-                    if(index == 10):
-                        out = json.dumps(rows)
-                        print(out)
-                        with self._driver.session() as session:
-                            session.write_transaction(lambda tx: tx.run(
-                                "WITH $x"
-                                "MERGE (:node{"
-                                    "nid: toInteger(x.nid),"
-                                    "vid: toInteger(x.vid),"
-                                    "type: x.type,"
-                                    "title: x.title,"
-                                    "language: x.language,"
-                                    "uid: toInteger(x.uid),"
-                                    "status: toInteger(x.status),"
-                                    "created: toInteger(x.created),"
-                                    "changed: toInteger(x.changed),"
-                                    "comment: toInteger(x.comment),"
-                                    "promote: toInteger(x.promote),"
-                                    "sticky: toInteger(x.sticky),"
-                                    "tnid: toInteger(x.tnid),"
-                                    "translate: toInteger(x.translate)"
-                                "})", x=out
-                            ))
-                        print(out)
-                        break
+                # for (index, row) in enumerate(csv_reader):
+                #     if(index == 0):
+                #         csv_header = row
+                #         csv_header[0]=csv_header[0].replace('\ufeff', '')
+                #         print(csv_header)
+                #         continue
+                #     rows.append(row)
+                #     if(index == 10):
+                #         out = json.dumps(rows)
+                #         print(out)
+                #         with self._driver.session() as session:
+                #             session.write_transaction(lambda tx: tx.run(
+                #                 "WITH $x"
+                #                 "MERGE (:node{"
+                #                     "nid: toInteger(x.nid),"
+                #                     "vid: toInteger(x.vid),"
+                #                     "type: x.type,"
+                #                     "title: x.title,"
+                #                     "language: x.language,"
+                #                     "uid: toInteger(x.uid),"
+                #                     "status: toInteger(x.status),"
+                #                     "created: toInteger(x.created),"
+                #                     "changed: toInteger(x.changed),"
+                #                     "comment: toInteger(x.comment),"
+                #                     "promote: toInteger(x.promote),"
+                #                     "sticky: toInteger(x.sticky),"
+                #                     "tnid: toInteger(x.tnid),"
+                #                     "translate: toInteger(x.translate)"
+                #                 "})", x=out
+                #             ))
+                #         print(out)
+                #         break
 
         except Exception as e:
             print(e)
