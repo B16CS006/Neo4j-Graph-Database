@@ -214,16 +214,23 @@ class DatabaseHandler(object):
                 # print(out)
                 csv_header = []
 
-                for (index, row) in enumerate(csv_reader):
-                    print(index)
-                    if(index == 0):
-                        csv_header = row
-                        csv_header[0]=csv_header[0].replace('\ufeff', '')
-                        print(csv_header)
-                        continue
-                    
-                    with self._driver.session() as session:
-                        session.write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
+                with self._driver.session() as session:
+                    tx = session.begin_transaction()
+                    for (index, row) in enumerate(csv_reader):
+                        print(index)
+                        if(index == 0):
+                            csv_header = row
+                            csv_header[0]=csv_header[0].replace('\ufeff', '')
+                            print(csv_header)
+                            continue
+                        if(index < 88732):
+                            continue
+                        tx.run(self.csv_load_node(csv_header, row))
+                        # session.write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
+                        if(index % 1000 == 0):
+                            tx.sync()
+                        if(index == 100000):
+                            break
                 return
 
                 # for (index, row) in enumerate(csv_reader):
