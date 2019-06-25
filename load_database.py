@@ -209,98 +209,20 @@ class DatabaseHandler(object):
             with open(self.database_dir + 'node.csv') as csv_file:
                 import csv, json
                 csv_reader = csv.reader(csv_file)
-                # reader = csv.DictReader( csv_file) # , fieldnames = ( 'nid', 'vid', 'type', 'language', 'title', 'uid', 'status', 'created', 'changed', 'comment', 'promote', 'sticky', 'tnid', 'translate', 'uuid' )
-                # out = json.dumps( [ row for row in reader ] )  
-                # print(out)
                 csv_header = []
-
-                with self._driver.session() as session:
-                    tx = session.begin_transaction()
-                    for (index, row) in enumerate(csv_reader):
-                        print(index)
-                        if(index == 0):
-                            csv_header = row
-                            csv_header[0]=csv_header[0].replace('\ufeff', '')
-                            print(csv_header)
-                            continue
-                        if(index < 88732):
-                            continue
-                        tx.run(self.csv_load_node(csv_header, row))
-                        # session.write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
-                        if(index % 1000 == 0):
-                            tx.sync()
-                        if(index == 100000):
-                            break
+                for (index, row) in enumerate(csv_reader):
+                    print(index)
+                    if(index == 0):
+                        csv_header = row
+                        csv_header[0]=csv_header[0].replace('\ufeff', '')
+                        print(csv_header)
+                        continue
+                    if(index < 89460):
+                        continue
+                    self._driver.session().write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
                 return
-
-                # for (index, row) in enumerate(csv_reader):
-                #     if(index == 0):
-                #         csv_header = row
-                #         csv_header[0]=csv_header[0].replace('\ufeff', '')
-                #         print(csv_header)
-                #         continue
-                #     rows.append(row)
-                #     if(index == 10):
-                #         out = json.dumps(rows)
-                #         print(out)
-                #         with self._driver.session() as session:
-                #             session.write_transaction(lambda tx: tx.run(
-                #                 "WITH $x"
-                #                 "MERGE (:node{"
-                #                     "nid: toInteger(x.nid),"
-                #                     "vid: toInteger(x.vid),"
-                #                     "type: x.type,"
-                #                     "title: x.title,"
-                #                     "language: x.language,"
-                #                     "uid: toInteger(x.uid),"
-                #                     "status: toInteger(x.status),"
-                #                     "created: toInteger(x.created),"
-                #                     "changed: toInteger(x.changed),"
-                #                     "comment: toInteger(x.comment),"
-                #                     "promote: toInteger(x.promote),"
-                #                     "sticky: toInteger(x.sticky),"
-                #                     "tnid: toInteger(x.tnid),"
-                #                     "translate: toInteger(x.translate)"
-                #                 "})", x=out
-                #             ))
-                #         print(out)
-                #         break
-
+            print('Nodes Successful Loaded')
+            return True
         except Exception as e:
             print(e)
-        return
-
-
-
-
-
-        #     with self._driver.session() as session:
-        #         tx = session.begin_transaction()
-        #         with open(self.database_dir + 'node.csv') as csv_file:
-        #             import csv
-        #             csv_reader = csv.reader(csv_file)
-        #             csv_header = []
-        #             for (index, row) in enumerate(csv_reader):
-        #                 if(index == 0):
-        #                     csv_header = row
-        #                     csv_header[0]=csv_header[0].replace('\ufeff', '')
-        #                     continue
-        #                 statement = self.csv_load_node(csv_header, row)
-        #                 # print(statement)
-        #                 tx.run(statement)
-        #                 if(index % 500 == 0):
-        #                     tx.sync()
-        #                     session = self._driver.session()
-        #                     tx.session.begin_transaction()
-        #             tx.commit()
-        #     print('Nodes Successful Loaded')
-        #     return True
-        # except Exception as e:
-        #     print(e)
-        # return False
-
-        # with driver.session() as session:
-        #     tx = session.begin_transaction()
-        #     node_id = create_person_node(tx)
-        #     set_person_name(tx, node_id, name)
-        #     tx.commit()
+        return False
