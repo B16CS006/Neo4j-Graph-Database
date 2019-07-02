@@ -69,6 +69,11 @@ class DatabaseHandler(object):
     def csv_load_nodes(self, start_from=0, max_count=-1, indent=0, filename='node'):
         try:
             csv_header, rows = self.return_head_tail(filename)
+            if(max_count <0):
+                rows = rows[start_from:]
+            else:
+                rows = rows[start_from: start_from + max_count]
+
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
@@ -87,6 +92,11 @@ class DatabaseHandler(object):
     def csv_load_taxonomy_terms(self, start_from=0, max_count=-1, indent=0, filename='taxonomy_term_data'):
         try:
             csv_header, rows = self.return_head_tail(filename)
+            if(max_count <0):
+                rows = rows[start_from:]
+            else:
+                rows = rows[start_from: start_from + max_count]
+
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
@@ -105,6 +115,10 @@ class DatabaseHandler(object):
     def csv_load_field_collection_items(self, start_from=0, max_count=-1, indent=0, filename='field_collection_item'):
         try:
             csv_header, rows = self.return_head_tail(filename)
+            if(max_count <0):
+                rows = rows[start_from:]
+            else:
+                rows = rows[start_from: start_from + max_count]
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
