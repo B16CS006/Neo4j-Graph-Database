@@ -12,42 +12,52 @@ class DatabaseHandler(object):
         self.database_dir = dir # dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'
         return
 
-################################## Load Nodes ############################################################
-    def node_merge_statement(self, x='x', indent=0, node='node'):
-        return \
-            '\t'*indent + 'MERGE (node:' + node + '{\n' + \
-            '\t'*indent + '\tnid: toInteger(' + x + '.nid),\n' + \
-            '\t'*indent + '\tvid: toInteger(' + x + '.vid),\n' + \
-            '\t'*indent + '\ttype: ' + x + '.type,\n' + \
-            '\t'*indent + '\ttitle: ' + x + '.title,\n' + \
-            '\t'*indent + '\tlanguage: ' + x + '.language,\n' + \
-            '\t'*indent + '\tuid: toInteger(' + x + '.uid),\n' + \
-            '\t'*indent + '\tstatus: toInteger(' + x + '.status),\n' + \
-            '\t'*indent + '\tcreated: toInteger(' + x + '.created),\n' + \
-            '\t'*indent + '\tchanged: toInteger(' + x + '.changed),\n' + \
-            '\t'*indent + '\tcomment: toInteger(' + x + '.comment),\n' + \
-            '\t'*indent + '\tpromote: toInteger(' + x + '.promote),\n' + \
-            '\t'*indent + '\tsticky: toInteger(' + x + '.sticky),\n' + \
-            '\t'*indent + '\ttnid: toInteger(' + x + '.tnid),\n' + \
-            '\t'*indent + '\ttranslate: toInteger(' + x + '.translate)\n' + \
-            '\t'*indent + '})'
+    def return_head_tail(self, file_name):
+        with open(file_name) as csv_file:
+            import csv
+            csv_reader = csv.reader(csv_file)
+            csv_header = []
+            for row in csv_reader:
+                csv_header = row
+                csv_header[0]=csv_header[0].replace('\ufeff', '')
+                break
+            csv_tail = []
+            for (index, row) in enumerate(csv_reader):
+                csv_tail.append(row)
+        return csv_header, csv_tail
 
-    def load_node_statement(self,x = 'x', indent=0, node='node'):
-        return \
-            self.node_load_csv(x, indent, node) + '\n' + \
-            self.node_merge_statement(x, indent, node) + '\n' + \
-            '\t'*indent + 'RETURN ' + node
+    def _write_transaction_(self, statement):
+        return self._driver.session().write_transaction(lambda tx: tx.run(statement))
 
-    def load_nodes(self):
+    # def load_database(self):
+    #     try:
+    #         self.load_nodes()
+    #         self.load_field_collection_item()
+    #         self.load_taxonomy_term()
+    #         self.load_fields()
+    #         print('Database succssfully Loaded')
+    #         return True
+    #     except Exception as e:
+    #         print(e)
+    #     return False
+
+    def delete_whole_database(self):
+        a = input('Are you sure about it(y/N): ')
+        if(a != 'y' and a != 'Y'):
+            print('Cancled')
+            return False
         try:
-            with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(self.load_node_statement()))
-            print('Nodes Successful Loaded')
+            self._write_transaction_("MATCH (n) DETACH DELETE n")
+            print('Whole Database Successfully Deleted')
             return True
         except Exception as e:
             print(e)
         return False
-########################### Load Field Collection Item ###################################################
+
+    def count_nodes(self):
+        return self._write_transaction_("MATCH (n) return count(n)")
+
+############################################################################################################
     def create_field_collection_item_statement(self, x='x', indent=0, node='node'):
         return \
             '\t'*indent + 'MERGE (' + node + ':field_collection_item{\n' + \
@@ -72,43 +82,10 @@ class DatabaseHandler(object):
         except Exception as e:
             print(e)
         return False
-############################### Load Taxonomy Term #######################################################
-    def create_taxonomy_term_statement(self, x='x', indent=0, node='node'):
-        return \
-            '\t'*indent + 'MERGE (' + node + ':field_collection_item{\n' + \
-            '\t'*indent + '\titem_id: toInteger(' + x + '.item_id),\n' + \
-            '\t'*indent + '\trevision_id: toInteger(' + x + '.revision_id),\n' + \
-            '\t'*indent + '\tfield_name: ' + x + '.field_name,\n' + \
-            '\t'*indent + '\tarchived: toInteger(' + x + '.archived)\n' + \
-            '\t'*indent + '})'
 
-    def load_taxonomy_term_statement(self, x='x', indent=0, node='node'):
-        return \
-            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'field_collection_item.csv\' AS ' + x + '\n' + \
-            self.create_field_collection_item_statement(x, indent, node) + '\n' + \
-            '\t'*indent + 'RETURN ' + node
+        
 
-    def load_taxonomy_term(self):
-        try:
-            with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(
-                    "LOAD CSV WITH HEADERS FROM 'file:///home/krrishna/Workspace/NPBridge/neo4j/ngov2/taxonomy_term_data.csv' AS x "
-                    "MERGE (term:taxonomy_term{ "
-                    "    tid: toInteger(x.tid), "
-                    "    vid: toInteger(x.vid), "
-                    "    name: x.name, "
-                    "    description: coalesce(x.description,''), "
-                    "    format: coalesce(x.format, ''), "
-                    "    weight: toInteger(x.weight) "
-                    "}) "
-                    "RETURN term "
-                ))
-            print('Taxonomy Term Successful Loaded')
-            return True
-        except Exception as e:
-            print(e)
-        return False
-
+##################################3#################################################################################################33
     def load_fields(self):
         try:
             with self._driver.session() as session:
@@ -153,39 +130,11 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def load_database(self):
-        try:
-            self.load_nodes()
-            self.load_field_collection_item()
-            self.load_taxonomy_term()
-            self.load_fields()
-            print('Database succssfully Loaded')
-            return True
-        except Exception as e:
-            print(e)
-        return False
-
-    def delete_whole_database(self):
-        a = input('Are you sure about it(y/N): ')
-        if(a != 'y' and a != 'Y'):
-            print('Cancled')
-            return False
-        try:
-            with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(
-                    "MATCH (n) DETACH DELETE n"
-                ))
-            print('Whole Database Successfully Deleted')
-            return True
-        except Exception as e:
-            print(e)
-        return False
-
 ######################################################################################################################
 
-    def csv_load_node(self, header, x, indent=0, node='node'):
+    def csv_load_node(self, header, x, indent=0, labels='node'):
         statement = \
-            '\t'*indent + 'MERGE (node:' + node + '{\n' + \
+            '\t'*indent + 'MERGE (node:' + labels + '{\n' + \
             '\t'*indent + '\tnid: toInteger("' + x[header.index('nid')] +'"),\n' + \
             '\t'*indent + '\tvid: toInteger("' + x[header.index('vid')] +'"),\n' + \
             '\t'*indent + '\ttype: "' + x[header.index('type')].replace('"', '\\"') +'",\n' + \
@@ -202,20 +151,6 @@ class DatabaseHandler(object):
             '\t'*indent + '\ttranslate: toInteger("' + x[header.index('translate')] +'")\n' + \
             '\t'*indent + '})'
         return statement
-
-    def return_head_tail(self, file_name):
-        with open(file_name) as csv_file:
-            import csv
-            csv_reader = csv.reader(csv_file)
-            csv_header = []
-            for row in csv_reader:
-                csv_header = row
-                csv_header[0]=csv_header[0].replace('\ufeff', '')
-                break
-            csv_tail = []
-            for (index, row) in enumerate(csv_reader):
-                csv_tail.append(row)
-        return csv_header, csv_tail
             
     def csv_load_nodes(self, x='x', indent=0, filename='node'):
         try:
@@ -234,5 +169,63 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def _write_transaction_(self, statement):
-        self._driver.session().write_transaction(lambda tx: tx.run(statement))
+######################################################################################################################
+
+def csv_load_taxonomy_term(self, header, x, indent=0, labels='taxonomy_term'):
+        statement = \
+            '\t'*indent + 'MERGE (term:' + labels + '{\n' + \
+            '\t'*indent + '\ttid: toInteger("' + x[header.index('tid')] +'"),\n' + \
+            '\t'*indent + '\tvid: toInteger("' + x[header.index('vid')] +'"),\n' + \
+            '\t'*indent + '\tname: "' + x[header.index('name')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tdescription: "' + x[header.index('description')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tformat: "' + x[header.index('format')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tweight: toInteger("' + x[header.index('weight')] +'"),\n' + \
+            '\t'*indent + '})'
+        return statement
+            
+    def csv_load_taxonomy_terms(self, x='x', indent=0, filename='taxonomy_term_data'):
+        try:
+            if(filename == 'taxonomy_term_data'):
+                filename = self.database_dir + file_name + '.csv'
+
+            csv_header, rows = self.return_head_tail(filename)
+            for i,row in enumerate(rows):
+                print(i)
+                statement = self.csv_load_taxonomy_term(csv_header, row)
+                self._write_transaction_(statement)
+
+            print('Taxonomy Terms Successful Loaded')
+            return True
+        except Exception as e:
+            print(e)
+        return False
+
+
+############################################################################################################################
+
+def csv_load_field_collection_item(self, header, x, indent=0, labels='field_collection_item'):
+        statement = \
+            '\t'*indent + 'MERGE (item:' + labels + '{\n' + \
+            '\t'*indent + '\titem_id: toInteger("' + x[header.index('item_id')] +'"),\n' + \
+            '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] +'"),\n' + \
+            '\t'*indent + '\tfield_name: "' + x[header.index('field_name')].replace('"', '\\"') +'",\n' + \
+            '\t'*indent + '\tarchived: toInteger("' + x[header.index('archived')] +'"),\n' + \
+            '\t'*indent + '})'
+        return statement
+            
+    def csv_load_field_collection_items(self, x='x', indent=0, filename='field_collection_item'):
+        try:
+            if(filename == 'field_collection_item'):
+                filename = self.database_dir + file_name + '.csv'
+
+            csv_header, rows = self.return_head_tail(filename)
+            for i,row in enumerate(rows):
+                print(i)
+                statement = self.csv_load_taxonomy_term(csv_header, row)
+                self._write_transaction_(statement)
+
+            print('Field Collection Items Successful Loaded')
+            return True
+        except Exception as e:
+            print(e)
+        return False
