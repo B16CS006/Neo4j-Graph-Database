@@ -1,5 +1,8 @@
 from neo4j import GraphDatabase
 
+class BreakIt(Exception):
+    pass
+
 class DatabaseHandler(object):
     def __init__(self, uri, user, password, dir='../database/ngov2/'):
         self.__change_dir__(dir)
@@ -63,10 +66,14 @@ class DatabaseHandler(object):
     
 ######################################################################################################################
             
-    def csv_load_nodes(self, indent=0, filename='node'):
+    def csv_load_nodes(self, start_from=0, max_count=20000, indent=0, filename='node'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
+                if(i < start_from):
+                    continue
+                elif(i - start_from >= max_count):
+                    break
                 print(i)
                 statement = self.node_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
@@ -77,10 +84,14 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_taxonomy_terms(self, indent=0, filename='taxonomy_term_data'):
+    def csv_load_taxonomy_terms(self, start_from=0, max_count=20000, indent=0, filename='taxonomy_term_data'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
+                if(i < start_from):
+                    continue
+                elif(i - start_from >= max_count):
+                    break
                 print(i)
                 statement = self.taxonomy_term_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
@@ -91,10 +102,14 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_field_collection_items(self, indent=0, filename='field_collection_item'):
+    def csv_load_field_collection_items(self, start_from=0, max_count=20000, indent=0, filename='field_collection_item'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
+                if(i < start_from):
+                    continue
+                elif(i - start_from >= max_count):
+                    break
                 print(i)
                 statement = self.field_collection_item_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
@@ -105,9 +120,10 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_fields(self, indent=0):
+    def csv_load_fields(self, start_from=0, max_count=20000, indent=0):
         try:
             field_config_header, field_config_tail = self.return_head_tail('field_config')
+            count = 0
             for i, field_config_element in enumerate(field_config_tail):
                 field_name = field_config_element[field_config_header.index('field_name')]
                 field_type = field_config_element[field_config_header.index('type')]
@@ -116,7 +132,13 @@ class DatabaseHandler(object):
                 field_data_header, field_data_tail = self.return_head_tail('field_data_' + field_name)
                     
                 for j, field_data_element in enumerate(field_data_tail):
-                    print(i,j)
+                    if(count < start_from):
+                        count += 1
+                        continue
+                    elif(count - start_from >= max_count):
+                        raise BreakIt('BreakIt: Fields Successfully Loaded')
+                    print(i, j, count)
+                    count = count + 1
                     entity_type = field_data_element[field_data_header.index('entity_type')]
                     entity_id = field_data_element[field_data_header.index('entity_id')]
 
@@ -138,6 +160,9 @@ class DatabaseHandler(object):
                         'MERGE (n)-[:' + field_name + ']->(y)'
                     self._write_transaction_(statement)
             print('Fields Successfully Loaded')
+            return True
+        except BreakIt as e:
+            print(e)
             return True
         except Exception as e:
             print(e)
