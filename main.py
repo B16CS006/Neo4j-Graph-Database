@@ -37,23 +37,23 @@ server_url = 'bolt://localhost:7687'
 
 a = DatabaseHandler(server_url, username, password, dir = database_dir)
 
-# while(True):
-#     try:
-#         print('\n\n')
-#         print('1: Create New Database')
-#         print('2: Delete Whole Database')
-#         print('3: Count Nodes')
-#         choice = int(input('Enter choice : '))
-#         if(choice < 0):
-#             a.close()
-#             break
-#         elif(choice == 0):
-#             load_big_database(server_url, username, password, database_dir)
-#         elif(choice == 1):
-#             a.load_database()
-#         elif(choice == 2):
-#             a.delete_whole_database()
-#         else:
-#             print(a.count_nodes())
-#     except Exception as e:
-#         print('\n', e, '\n')
+while(True):
+    try:
+        print('\n\n')
+        print('1: Create New Database')
+        print('2: Delete Whole Database')
+        print('3: Count Nodes')
+        choice = int(input('Enter choice : '))
+        if(choice < 0):
+            a.close()
+            break
+        elif(choice == 0):
+            load_big_database(server_url, username, password, database_dir)
+        elif(choice == 1):
+            a.load_database()
+        elif(choice == 2):
+            a.delete_whole_database()
+        else:
+            print(a.count_nodes())
+    except Exception as e:
+        print('\n', e, '\n')

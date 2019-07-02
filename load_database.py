@@ -39,7 +39,7 @@ class DatabaseHandler(object):
         _field_collection_items = self.csv_load_field_collection_items()
         _fields = self.csv_load_fields()
     
-        if(_nodes and _taxonomy_terms and _field_collection_items):
+        if(_nodes and _taxonomy_terms and _field_collection_items and _fields):
             print('Database succssfully Loaded')
             return True
         else:
@@ -63,12 +63,12 @@ class DatabaseHandler(object):
     
 ######################################################################################################################
             
-    def csv_load_nodes(self, x='x', indent=0, filename='node'):
+    def csv_load_nodes(self, indent=0, filename='node'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 print(i)
-                statement = self.node_structure(csv_header, row)
+                statement = self.node_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
             print('Nodes Successful Loaded')
@@ -77,12 +77,12 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_taxonomy_terms(self, x='x', indent=0, filename='taxonomy_term_data'):
+    def csv_load_taxonomy_terms(self, indent=0, filename='taxonomy_term_data'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 print(i)
-                statement = self.taxonomy_term_structure(csv_header, row)
+                statement = self.taxonomy_term_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
             print('Taxonomy Terms Successful Loaded')
@@ -91,12 +91,12 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_field_collection_items(self, x='x', indent=0, filename='field_collection_item'):
+    def csv_load_field_collection_items(self, indent=0, filename='field_collection_item'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 print(i)
-                statement = self.field_collection_item_structure(csv_header, row)
+                statement = self.field_collection_item_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
             print('Field Collection Items Successful Loaded')
@@ -105,38 +105,43 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_fields(self):
-        field_config_header, field_config_tail = self.return_head_tail('field_config')
-        for i, field_config_element in enumerate(field_config_tail):
-            field_name = field_config_element[field_config_header.index('field_name')]
-            field_type = field_config_element[field_config_header.index('type')]
-            if(field_name == 'field_geofield' or field_name == 'comment_body'):
-                continue
-            field_data_header, field_data_tail = self.return_head_tail('field_data_' + field_name)
-                
-            for j, field_data_element in enumerate(field_data_tail):
-                print(i,j)
-                entity_type = field_data_element[field_data_header.index('entity_type')]
-                entity_id = field_data_element[field_data_header.index('entity_id')]
-
-                statement = 'MATCH (n:' + entity_type + ') WHERE toInteger(n.'
-
-                if(entity_type == 'node'):
-                    statement = statement + 'nid'
-                elif(entity_type == 'field_collection_item'):
-                    statement = statement + 'item_id'
-                elif(entity_type == 'taxonomy_term'):
-                    statement = statement + 'tid'
-                elif(entity_type == 'comment'):
+    def csv_load_fields(self, indent=0):
+        try:
+            field_config_header, field_config_tail = self.return_head_tail('field_config')
+            for i, field_config_element in enumerate(field_config_tail):
+                field_name = field_config_element[field_config_header.index('field_name')]
+                field_type = field_config_element[field_config_header.index('type')]
+                if(field_name == 'field_geofield' or field_name == 'comment_body'):
                     continue
+                field_data_header, field_data_tail = self.return_head_tail('field_data_' + field_name)
+                    
+                for j, field_data_element in enumerate(field_data_tail):
+                    print(i,j)
+                    entity_type = field_data_element[field_data_header.index('entity_type')]
+                    entity_id = field_data_element[field_data_header.index('entity_id')]
 
-                function_name = 'field_' + field_type + '_structure'
+                    statement = 'MATCH (n:' + entity_type + ') WHERE toInteger(n.'
 
-                statement = statement + ') = toInteger("' + entity_id + '")\nWITH n\n' + \
-                    getattr(self, function_name)(field_data_header, field_data_element, field_name) + '\n' + \
-                    'MERGE (n)-[:' + field_name + ']->(y)'
-                # self._write_transaction_(statement)
-                # print(statement , '\n')
+                    if(entity_type == 'node'):
+                        statement = statement + 'nid'
+                    elif(entity_type == 'field_collection_item'):
+                        statement = statement + 'item_id'
+                    elif(entity_type == 'taxonomy_term'):
+                        statement = statement + 'tid'
+                    elif(entity_type == 'comment'):
+                        continue
+
+                    function_name = 'field_' + field_type + '_structure'
+
+                    statement = statement + ') = toInteger("' + entity_id + '")\nWITH n\n' + \
+                        getattr(self, function_name)(field_data_header, field_data_element, field_name, indent) + '\n' + \
+                        'MERGE (n)-[:' + field_name + ']->(y)'
+                    self._write_transaction_(statement)
+            print('Fields Successfully Loaded')
+            return True
+        except Exception as e:
+            print(e)
+        return False
 
 ######################################################################################################
 
