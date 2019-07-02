@@ -179,7 +179,7 @@ class DatabaseHandler(object):
             '\t'*indent + '\tname: "' + x[header.index('name')].replace('"', '\\"') +'",\n' + \
             '\t'*indent + '\tdescription: "' + x[header.index('description')].replace('"', '\\"') +'",\n' + \
             '\t'*indent + '\tformat: "' + x[header.index('format')].replace('"', '\\"') +'",\n' + \
-            '\t'*indent + '\tweight: toInteger("' + x[header.index('weight')] +'"),\n' + \
+            '\t'*indent + '\tweight: toInteger("' + x[header.index('weight')] +'")\n' + \
             '\t'*indent + '})'
         return statement
                 
@@ -209,7 +209,7 @@ class DatabaseHandler(object):
             '\t'*indent + '\titem_id: toInteger("' + x[header.index('item_id')] +'"),\n' + \
             '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] +'"),\n' + \
             '\t'*indent + '\tfield_name: "' + x[header.index('field_name')].replace('"', '\\"') +'",\n' + \
-            '\t'*indent + '\tarchived: toInteger("' + x[header.index('archived')] +'"),\n' + \
+            '\t'*indent + '\tarchived: toInteger("' + x[header.index('archived')] +'")\n' + \
             '\t'*indent + '})'
         return statement
             
@@ -221,7 +221,7 @@ class DatabaseHandler(object):
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 print(i)
-                statement = self.csv_load_taxonomy_term(csv_header, row)
+                statement = self.csv_load_field_collection_item(csv_header, row)
                 self._write_transaction_(statement)
 
             print('Field Collection Items Successful Loaded')
