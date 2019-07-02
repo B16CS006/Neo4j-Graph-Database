@@ -66,13 +66,13 @@ class DatabaseHandler(object):
     
 ######################################################################################################################
             
-    def csv_load_nodes(self, start_from=0, max_count=20000, indent=0, filename='node'):
+    def csv_load_nodes(self, start_from=0, max_count=-1, indent=0, filename='node'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
-                elif(i - start_from >= max_count):
+                elif(max_count > 0 and i - start_from >= max_count):
                     break
                 print(i)
                 statement = self.node_structure(csv_header, row, indent)
@@ -84,13 +84,13 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_taxonomy_terms(self, start_from=0, max_count=20000, indent=0, filename='taxonomy_term_data'):
+    def csv_load_taxonomy_terms(self, start_from=0, max_count=-1, indent=0, filename='taxonomy_term_data'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
-                elif(i - start_from >= max_count):
+                elif(max_count > 0 and i - start_from >= max_count):
                     break
                 print(i)
                 statement = self.taxonomy_term_structure(csv_header, row, indent)
@@ -102,13 +102,13 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_field_collection_items(self, start_from=0, max_count=20000, indent=0, filename='field_collection_item'):
+    def csv_load_field_collection_items(self, start_from=0, max_count=-1, indent=0, filename='field_collection_item'):
         try:
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
                 if(i < start_from):
                     continue
-                elif(i - start_from >= max_count):
+                elif(max_count > 0 and i - start_from >= max_count):
                     break
                 print(i)
                 statement = self.field_collection_item_structure(csv_header, row, indent)
@@ -120,7 +120,7 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_fields(self, start_from=0, max_count=20000, indent=0):
+    def csv_load_fields(self, start_from=0, max_count=-1, indent=0):
         try:
             field_config_header, field_config_tail = self.return_head_tail('field_config')
             count = 0
@@ -135,7 +135,7 @@ class DatabaseHandler(object):
                     if(count < start_from):
                         count += 1
                         continue
-                    elif(count - start_from >= max_count):
+                    elif(max_count > 0 and count - start_from >= max_count):
                         raise BreakIt('BreakIt: Fields Successfully Loaded')
                     print(i, j, count)
                     count = count + 1
