@@ -1,8 +1,9 @@
 from load_database import DatabaseHandler
-import multiprocessing
 import sys
 
 def load_big_database(server_url, username, password, database_dir = './'):
+    '''Here we every time initilize a new object of DatabaseHandler so it take less memory each function'''
+    
     load_nodes(server_url, username, password, database_dir)
     load_taxonomy_terms(server_url, username, password, database_dir)
     load_field_collection_items(server_url, username, password, database_dir)
