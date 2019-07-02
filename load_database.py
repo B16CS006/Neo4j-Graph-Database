@@ -239,9 +239,11 @@ class DatabaseHandler(object):
                 # print('/////////////////////////////;')
                 # print(field_config_header)
                 # print(field_config_element,'\n')
-                print(field_data_header,'\n')
+                # print(field_data_header,'\n')
                 # print(field_data_element)
                 # return
+
+                print('field_' + field_type + '_structure'(field_data_header, field_data_element) + '\n')
                 # statement = statement + 'field_' + field_type + '_structure'(field_data_header, field_data_element) + '\n'
                 
                 # print(statement,'\n')
@@ -296,7 +298,22 @@ class DatabaseHandler(object):
 
 ################################################################################################
 
+    def __column_with_string__(column_name, column_value, indent = 0):
+        return '\t'*indent + '\t' + column_name + ': "' + column_value.replace('"', '\\"') + '"'
 
+    def __column_with_integer__(column_name, column_value, indent = 0):
+        return '\t'*indent + '\t' + column_name + ': toInteger("' + column_value + '")'
+
+    def __column_with_string_and_field_name__(column_name, column_value, indent = 0):
+        return '\t'*indent + '\t' + column_name + ': "' + column_value.replace('"', '\\"') + '"'
+
+    def __column_with_integer_and_field_name__(column_name, column_value, indent = 0):
+        return '\t'*indent + '\t' + column_name + ': toInteger("' + column_value + '")'
+
+    def __column_with_float_and_field_name__(column_name, column_value, indent = 0):
+        return '\t'*indent + '\t' + column_name + ': toFloat("' + column_value + '")'
+
+######################################################################################################
 
     def field_entityreference_structure(self, header, x, fieldname, indent=0):
         statement = \
@@ -319,33 +336,7 @@ class DatabaseHandler(object):
             '\t'*indent + '}) RETURN y'
         return statement
 
-
-
-
-
-
-    def __column_with_string__(column_name, column_value, indent = 0):
-        return '\t'*indent + '\t' + column_name + ': "' + column_value.replace('"', '\\"') + '"'
-
-    def __column_with_integer__(column_name, column_value, indent = 0):
-        return '\t'*indent + '\t' + column_name + ': toInteger("' + column_value + '")'
-
-    def __column_with_string_and_field_name__(column_name, column_value, indent = 0):
-        return '\t'*indent + '\t' + column_name + ': "' + column_value.replace('"', '\\"') + '"'
-
-    def __column_with_integer_and_field_name__(column_name, column_value, indent = 0):
-        return '\t'*indent + '\t' + column_name + ': toInteger("' + column_value + '")'
-
-    def __column_with_float_and_field_name__(column_name, column_value, indent = 0):
-        return '\t'*indent + '\t' + column_name + ': toFloat("' + column_value + '")'
-
-
-
-
-
-
-
-    def field_email_structure(self, header, x, indent=0, labels='field_collection_item'):
+    def field_email_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :email{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -355,11 +346,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
-            '\t'*indent + '\temail: "' + x[header.index(fieldname + '_email')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\temail: "' + x[header.index(fieldname + '_email')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-    def field_text_with_summary_structure(self, header, x, indent=0, labels='field_collection_item'):
+    def field_text_with_summary_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :text_with_summary{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -371,17 +362,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
             '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tsummary: "' + x[header.index(fieldname + '_summary')].replace('"', '\\"') + '",\n' + \
-            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-
-
-            '\t'*indent + '\t: toInteger("' + x[header.index(fieldname + '')] + '"),\n' + \
-            '\t'*indent + '\t: "' + x[header.index(fieldname + '')].replace('"', '\\"') + '",\n' + \
-    
-
-    def field_text_long_structure(self, header, x, indent=0, labels=''):
+    def field_text_long_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :text_long{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -392,12 +377,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
             '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '",\n' + \
-            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-
-    def field_image_structure(self, header, x, indent=0, labels=''):
+    def field_image_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :image{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -411,14 +395,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\talt: "' + x[header.index(fieldname + '_alt')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tfid: toInteger("' + x[header.index(filename + '_fid')] + '"),\n' + \
             '\t'*indent + '\twidth: toFloat("' + x[header.index(filename + '_width')] + '"),\n' + \
-            '\t'*indent + '\theight: toFloat("' + x[header.index(filename + '_height')] + '"),\n' + \
+            '\t'*indent + '\theight: toFloat("' + x[header.index(filename + '_height')] + '")\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-    "'list_text', ======= 
-    value: coalesce(x[field_name+'_value'], '') }) RETURN y\", "
-
-    def field_list_text_structure(self, header, x, indent=0, labels=''):
+    def field_list_text_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :list_text{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -428,13 +409,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
-            '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-
-
-    def field_text_structure(self, header, x, indent=0, labels=''):
+    def field_text_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :text{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -445,11 +424,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
             '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '",\n' + \
-            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tformat: "' + x[header.index(fieldname + '_format')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement    
 
-    def field_mobile_number_structure(self, header, x, indent=0, labels=''):
+    def field_mobile_number_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :mobile_number{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -459,16 +438,15 @@ class DatabaseHandler(object):
             '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
-            '\t'*indent + '\tvalue: "' + x[header.index(field_name + '_value')].replace('"', '\\"') + '",\n' + \ 
-            '\t'*indent + '\tcountry: "' + x[header.index(field_name + '_country')].replace('"', '\\"') + '",\n' + \ 
-            '\t'*indent + '\tlocal_number: "' + x[header.index(field_name + '_local_number')].replace('"', '\\"') + '",\n' + \ 
-            '\t'*indent + '\tverified: toInteger("' + x[header.index(field_name+'_verified')] + '"),\n' + \ 
-            '\t'*indent + '\ttfa: toInteger("' + x[header.index(field_name+'_tfa')] + '"),\n' + \
+            '\t'*indent + '\tvalue: "' + x[header.index(field_name + '_value')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tcountry: "' + x[header.index(field_name + '_country')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tlocal_number: "' + x[header.index(field_name + '_local_number')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tverified: toInteger("' + x[header.index(field_name+'_verified')] + '"),\n' + \
+            '\t'*indent + '\ttfa: toInteger("' + x[header.index(field_name+'_tfa')] + '")\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-
-    def field_geofield_structure(self, header, x, indent=0, labels=''):
+    def field_geofield_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :geofield{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -486,11 +464,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\tright: toFloat("' + x[header.index(field_name+'_right')] + '"),\n' + \
             '\t'*indent + '\ttop: toFloat("' + x[header.index(field_name+'_top')] + '"),\n' + \
             '\t'*indent + '\tbottom: toFloat("' + x[header.index(field_name+'_bottom')] + '"),\n' + \
-            '\t'*indent + '\tgeohash: "' + x[header(field_name + '_geohash')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tgeohash: "' + x[header(field_name + '_geohash')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-    def field_number_integer_structure(self, header, x, indent=0, labels=''):
+    def field_number_integer_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :number_integer{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -500,11 +478,11 @@ class DatabaseHandler(object):
             '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
             '\t'*indent + '\tlanguage: "' + x[header.index('langauge')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
-            '\t'*indent + '\tvalue: toInteger("' + x[header.index(field_name+'_value')] + '"),\n' + \
+            '\t'*indent + '\tvalue: toInteger("' + x[header.index(field_name+'_value')] + '")\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
 
-    def field_link_field_structure(self, header, x, indent=0, labels=''):
+    def field_link_field_structure(self, header, x, indent=0):
         statement = \
             '\t'*indent + 'MERGE (y :link_field{\n' + \
             '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
@@ -516,7 +494,7 @@ class DatabaseHandler(object):
             '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
             '\t'*indent + '\turl: "' + x[header(field_name + '_url')].replace('"', '\\"') + '",\n' + \
             '\t'*indent + '\ttitle: "' + x[header(field_name + '_title')].replace('"', '\\"') + '",\n' + \
-            '\t'*indent + '\tattributes: "' + x[header(field_name + '_attributes')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tattributes: "' + x[header(field_name + '_attributes')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '}) RETURN y'
         return statement
     
