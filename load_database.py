@@ -201,28 +201,38 @@ class DatabaseHandler(object):
             '\t'*indent + '\ttnid: toInteger("' + x[header.index('tnid')] +'"),\n' + \
             '\t'*indent + '\ttranslate: toInteger("' + x[header.index('translate')] +'")\n' + \
             '\t'*indent + '})'
-
         return statement
 
-    def csv_load_nodes(self, x='x', indent=0):
+    def return_head_tail(self, file_name):
+        with open(file_name) as csv_file:
+            import csv
+            csv_reader = csv.reader(csv_file)
+            csv_header = []
+            for row in csv_reader:
+                csv_header = row
+                csv_header[0]=csv_header[0].replace('\ufeff', '')
+                break
+            csv_tail = []
+            for (index, row) in enumerate(csv_reader):
+                csv_tail.append(row)
+        return csv_header, csv_tail
+            
+    def csv_load_nodes(self, x='x', indent=0, filename='node'):
         try:
-            with open(self.database_dir + 'node.csv') as csv_file:
-                import csv, json
-                csv_reader = csv.reader(csv_file)
-                csv_header = []
-                for (index, row) in enumerate(csv_reader):
-                    print(index)
-                    if(index == 0):
-                        csv_header = row
-                        csv_header[0]=csv_header[0].replace('\ufeff', '')
-                        print(csv_header)
-                        continue
-                    if(index < 89460):
-                        continue
-                    self._driver.session().write_transaction(lambda tx: tx.run(self.csv_load_node(csv_header, row)))
-                return
+            if(filename == 'node'):
+                filename = self.database_dir + file_name + '.csv'
+
+            csv_header, rows = self.return_head_tail(filename)
+            for i,row in enumerate(rows):
+                print(i)
+                statement = self.csv_load_node(csv_header, row)
+                self._write_transaction_(statement)
+
             print('Nodes Successful Loaded')
             return True
         except Exception as e:
             print(e)
         return False
+
+    def _write_transaction_(self, statement):
+        self._driver.session().write_transaction(lambda tx: tx.run(statement))
