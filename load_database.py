@@ -12,8 +12,8 @@ class DatabaseHandler(object):
         self.database_dir = dir # dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'
         return
 
-    def return_head_tail(self, file_name):
-        with open(file_name) as csv_file:
+    def return_head_tail(self, filename):
+        with open(filename) as csv_file:
             import csv
             csv_reader = csv.reader(csv_file)
             csv_header = []
@@ -55,7 +55,7 @@ class DatabaseHandler(object):
         return False
 
     def count_nodes(self):
-        return self._write_transaction_("MATCH (n) return count(n)")
+        return self._write_transaction_("MATCH (n) return count(n)").single().value()
 
 ############################################################################################################
     def create_field_collection_item_statement(self, x='x', indent=0, node='node'):
@@ -155,7 +155,7 @@ class DatabaseHandler(object):
     def csv_load_nodes(self, x='x', indent=0, filename='node'):
         try:
             if(filename == 'node'):
-                filename = self.database_dir + file_name + '.csv'
+                filename = self.database_dir + filename + '.csv'
 
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
@@ -171,7 +171,7 @@ class DatabaseHandler(object):
 
 ######################################################################################################################
 
-def csv_load_taxonomy_term(self, header, x, indent=0, labels='taxonomy_term'):
+    def csv_load_taxonomy_term(self, header, x, indent=0, labels='taxonomy_term'):
         statement = \
             '\t'*indent + 'MERGE (term:' + labels + '{\n' + \
             '\t'*indent + '\ttid: toInteger("' + x[header.index('tid')] +'"),\n' + \
@@ -182,11 +182,11 @@ def csv_load_taxonomy_term(self, header, x, indent=0, labels='taxonomy_term'):
             '\t'*indent + '\tweight: toInteger("' + x[header.index('weight')] +'"),\n' + \
             '\t'*indent + '})'
         return statement
-            
+                
     def csv_load_taxonomy_terms(self, x='x', indent=0, filename='taxonomy_term_data'):
         try:
             if(filename == 'taxonomy_term_data'):
-                filename = self.database_dir + file_name + '.csv'
+                filename = self.database_dir + filename + '.csv'
 
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):
@@ -203,7 +203,7 @@ def csv_load_taxonomy_term(self, header, x, indent=0, labels='taxonomy_term'):
 
 ############################################################################################################################
 
-def csv_load_field_collection_item(self, header, x, indent=0, labels='field_collection_item'):
+    def csv_load_field_collection_item(self, header, x, indent=0, labels='field_collection_item'):
         statement = \
             '\t'*indent + 'MERGE (item:' + labels + '{\n' + \
             '\t'*indent + '\titem_id: toInteger("' + x[header.index('item_id')] +'"),\n' + \
@@ -216,7 +216,7 @@ def csv_load_field_collection_item(self, header, x, indent=0, labels='field_coll
     def csv_load_field_collection_items(self, x='x', indent=0, filename='field_collection_item'):
         try:
             if(filename == 'field_collection_item'):
-                filename = self.database_dir + file_name + '.csv'
+                filename = self.database_dir + filename + '.csv'
 
             csv_header, rows = self.return_head_tail(filename)
             for i,row in enumerate(rows):

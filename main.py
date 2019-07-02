@@ -2,23 +2,51 @@ from load_database import DatabaseHandler
 import multiprocessing
 import sys
 
-def load_nodes(filename):
-    a = DatabaseHandler('bolt://localhost:7687','neo4j', 'a392912030502', dir='../database/temp/')
-    # header, tail = a.return_head_tail(filename)
-    # print(header)
-    # print(tail[0])
-    # return
-    a.csv_load_nodes(filename = filename)
+
+
+def load_small_database(server_url, username, password, database_dir = './'):
+    if(database_dir[-1] != '/'):
+        database_dir = database_dir + '/'
+    a = DatabaseHandler(server_url, username, password, database_dir)
+    a.csv_load_nodes()
+    a.csv_load_taxonomy_terms()
+    a.csv_load_field_collection_items()
+    print('Database is successfully loaded')
+    return
+
+def load_big_database(server_url, username, password, database_dir = './'):
+    load_nodes(server_url, username, password, database_dir)
+    load_taxonomy_terms(server_url, username, password, database_dir)
+    load_field_collection_items(server_url, username, password, database_dir)
+    print('Database is successfully loaded')
+
+def load_nodes(server_url, username, password, database_dir):
+    a = DatabaseHandler(server_url, username, password, dir = database_dir)
+    a.csv_load_nodes()
+
+def load_taxonomy_terms(server_url, username, password, database_dir):
+    a = DatabaseHandler(server_url, username, password, dir = database_dir)
+    a.csv_load_taxonomy_terms()
+
+def load_field_collection_items(server_url, username, password, database_dir):
+    a = DatabaseHandler(server_url, username, password, dir = database_dir)
+    a.csv_load_field_collection_items()
+
+
 
 if(len(sys.argv) != 2):
     sys.exit('Invalid Argument: Requred 2 argument but ' +  str(len(sys.argv)) + ' are provided')
 else:
-    filename = sys.argv[1]
-    ext = filename.split('.')   [-1]
-    if(ext != 'csv'):
-        sys.exit('Invalid file type: Required \'csv\' but \'' + ext + '\' is provided')
+    database_dir = sys.argv[1]
 
-load_nodes(filename)
+username = "neo4j"
+password = "a392912030502"
+server_url = 'bolt://localhost:7687'
+
+load_small_database(server_url, username, password, database_dir)
+
+
+# load_nodes(filename)
 
 
 
