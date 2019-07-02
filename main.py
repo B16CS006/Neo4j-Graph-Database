@@ -2,18 +2,6 @@ from load_database import DatabaseHandler
 import multiprocessing
 import sys
 
-
-
-def load_small_database(server_url, username, password, database_dir = './'):
-    if(database_dir[-1] != '/'):
-        database_dir = database_dir + '/'
-    a = DatabaseHandler(server_url, username, password, database_dir)
-    a.csv_load_nodes()
-    a.csv_load_taxonomy_terms()
-    a.csv_load_field_collection_items()
-    print('Database is successfully loaded')
-    return
-
 def load_big_database(server_url, username, password, database_dir = './'):
     load_nodes(server_url, username, password, database_dir)
     load_taxonomy_terms(server_url, username, password, database_dir)
@@ -58,7 +46,7 @@ while(True):
         elif(choice == 0):
             load_big_database(server_url, username, password, database_dir)
         elif(choice == 1):
-            load_small_database(server_url, username, password, database_dir)
+            a.load_database()
         elif(choice == 2):
             a.delete_whole_database()
         else:

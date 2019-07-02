@@ -29,17 +29,17 @@ class DatabaseHandler(object):
     def _write_transaction_(self, statement):
         return self._driver.session().write_transaction(lambda tx: tx.run(statement))
 
-    # def load_database(self):
-    #     try:
-    #         self.load_nodes()
-    #         self.load_field_collection_item()
-    #         self.load_taxonomy_term()
-    #         self.load_fields()
-    #         print('Database succssfully Loaded')
-    #         return True
-    #     except Exception as e:
-    #         print(e)
-    #     return False
+    def load_database(self):
+        _nodes = self.csv_load_nodes()
+        _taxonomy_terms = self.csv_load_taxonomy_terms()
+        _field_collection_items = self.csv_load_field_collection_items()
+        #_fields = self.csv_load_fields()
+    
+        if(_nodes and _taxonomy_terms and _field_collection_items):
+            print('Database succssfully Loaded')
+            return True
+        else:
+            return False
 
     def delete_whole_database(self):
         a = input('Are you sure about it(y/N): ')
@@ -56,33 +56,6 @@ class DatabaseHandler(object):
 
     def count_nodes(self):
         return self._write_transaction_("MATCH (n) return count(n)").single().value()
-
-############################################################################################################
-    def create_field_collection_item_statement(self, x='x', indent=0, node='node'):
-        return \
-            '\t'*indent + 'MERGE (' + node + ':field_collection_item{\n' + \
-            '\t'*indent + '\titem_id: toInteger(' + x + '.item_id),\n' + \
-            '\t'*indent + '\trevision_id: toInteger(' + x + '.revision_id),\n' + \
-            '\t'*indent + '\tfield_name: ' + x + '.field_name,\n' + \
-            '\t'*indent + '\tarchived: toInteger(' + x + '.archived)\n' + \
-            '\t'*indent + '})'
-
-    def load_field_collection_item_statement(self, x='x', indent=0, node='node'):
-        return \
-            '\t'*indent + 'LOAD CSV WITH HEADERS FROM \'' + self.database_dir + 'field_collection_item.csv\' AS ' + x + '\n' + \
-            self.create_field_collection_item_statement(x, indent, node) + '\n' + \
-            '\t'*indent + 'RETURN ' + node
-    
-    def load_field_collection_item(self):
-        try:
-            with self._driver.session() as session:
-                session.write_transaction(lambda tx: tx.run(self.load_field_collection_item_statement()))
-            print('Field Collection Item Successful Loaded')
-            return True
-        except Exception as e:
-            print(e)
-        return False
-
         
 
 ##################################3#################################################################################################33
