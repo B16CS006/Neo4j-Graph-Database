@@ -102,7 +102,7 @@ class DatabaseHandler(object):
             print('Field Collection Items Successful Loaded')
             return True
         except Exception as e:
-            print(e)load_database
+            print(e)
         return False
 
     def csv_load_fields(self, indent=0):
@@ -190,22 +190,19 @@ class DatabaseHandler(object):
     def field_entityreference_structure(self, header, x, fieldname, indent=0):
         statement = \
             '\t'*indent + 'MATCH (y :node) ' + \
-            '\t'*indent + 'WHERE toInteger(y.nid) = toInteger("' + x[header.index(fieldname + '_target_id')] +'")\n' + \
-            '\t'*indent + '})'
+            '\t'*indent + 'WHERE toInteger(y.nid) = toInteger("' + x[header.index(fieldname + '_target_id')] +'")\n'
         return statement
 
     def field_taxonomy_term_reference_structure(self, header, x, fieldname, indent=0):
         statement = \
             '\t'*indent + 'MATCH (y :taxonomy_term) ' + \
-            '\t'*indent + 'WHERE toInteger(y.tid) = toInteger("' + x[header.index(fieldname + '_tid')] +'")\n' + \
-            '\t'*indent + '})'
+            '\t'*indent + 'WHERE toInteger(y.tid) = toInteger("' + x[header.index(fieldname + '_tid')] +'")\n'
         return statement
 
     def field_field_collection_structure(self, header, x, fieldname, indent=0):
         statement = \
             '\t'*indent + 'MATCH (y :field_collection_item) ' + \
-            '\t'*indent + 'WHERE toInteger(y.item_id) = toInteger("' + x[header.index(fieldname + '_value')] +'")\n' + \
-            '\t'*indent + '})'
+            '\t'*indent + 'WHERE toInteger(y.item_id) = toInteger("' + x[header.index(fieldname + '_value')] +'")\n'
         return statement
 
     def field_email_structure(self, header, x, fieldname, indent=0):

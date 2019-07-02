@@ -6,6 +6,7 @@ def load_big_database(server_url, username, password, database_dir = './'):
     load_nodes(server_url, username, password, database_dir)
     load_taxonomy_terms(server_url, username, password, database_dir)
     load_field_collection_items(server_url, username, password, database_dir)
+    load_fields(server_url, username, password, database_dir)
     print('Database is successfully loaded')
 
 def load_nodes(server_url, username, password, database_dir):
@@ -19,6 +20,10 @@ def load_taxonomy_terms(server_url, username, password, database_dir):
 def load_field_collection_items(server_url, username, password, database_dir):
     a = DatabaseHandler(server_url, username, password, dir = database_dir)
     a.csv_load_field_collection_items()
+
+def load_fields(server_url, username, password, database_dir):
+    a = DatabaseHandler(server_url, username, password, dir = database_dir)
+    a.csv_load_fields()
 
 
 
