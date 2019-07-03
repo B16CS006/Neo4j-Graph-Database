@@ -15,11 +15,16 @@ class DatabaseHandler(object):
         self.database_dir = dir # dir='file:///home/krrishna/Workspace/NPBridge/database/drupal/'
         return
 
-    def return_head_tail(self, filename):
-
+    def __filename__(self, filename):
         if(filename.split('.')[-1] != 'csv'):
             filename = self.database_dir + filename + '.csv'
+        return filename
 
+    def count_lines_in_file(self, filename):
+        return len(self.return_head_tail(filename)[1])
+    
+    def return_head_tail(self, filename):
+        filename = self.__filename__(filename)
         with open(filename) as csv_file:
             import csv
             csv_reader = csv.reader(csv_file)
@@ -75,11 +80,10 @@ class DatabaseHandler(object):
                 rows = rows[start_from: start_from + max_count]
 
             for i,row in enumerate(rows):
-                if(i < start_from):
-                    continue
-                elif(max_count > 0 and i - start_from >= max_count):
+                if(max_count > 0 and i - start_from >= max_count):
+                    print(i-start_from, max_count)
                     break
-                print(i)
+                print('i =', i, ', count = ', i + start_from)
                 statement = self.node_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
@@ -98,11 +102,9 @@ class DatabaseHandler(object):
                 rows = rows[start_from: start_from + max_count]
 
             for i,row in enumerate(rows):
-                if(i < start_from):
-                    continue
-                elif(max_count > 0 and i - start_from >= max_count):
+                if(max_count > 0 and i - start_from >= max_count):
                     break
-                print(i)
+                print('i =', i, ', count = ', i + start_from)
                 statement = self.taxonomy_term_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
@@ -120,11 +122,9 @@ class DatabaseHandler(object):
             else:
                 rows = rows[start_from: start_from + max_count]
             for i,row in enumerate(rows):
-                if(i < start_from):
-                    continue
-                elif(max_count > 0 and i - start_from >= max_count):
+                if(max_count > 0 and i - start_from >= max_count):
                     break
-                print(i)
+                print('i =', i, ', count = ', i + start_from)
                 statement = self.field_collection_item_structure(csv_header, row, indent)
                 self._write_transaction_(statement)
 
@@ -141,18 +141,28 @@ class DatabaseHandler(object):
             for i, field_config_element in enumerate(field_config_tail):
                 field_name = field_config_element[field_config_header.index('field_name')]
                 field_type = field_config_element[field_config_header.index('type')]
-                if(field_name == 'field_geofield' or field_name == 'comment_body'):
-                    continue
+                # if(field_name == 'field_geofield' or field_name == 'comment_body'):
+                    # continue
                 field_data_header, field_data_tail = self.return_head_tail('field_data_' + field_name)
+                
+                if(count + len(field_data_tail) <= start_from):
+                    count += len(field_data_tail)
+                    field_data_header.clear()
+                    field_data_tail.clear()
+                    continue
+                elif(max_count > 0 and count >= start_from + max_count):
+                    break
+                else:
+                    start_index = max(0, start_from - count)
+                    if(max_count < 0):
+                        field_data_tail = field_data_tail[start_index:]
+                    else:
+                        field_data_tail = field_data_tail[start_index : start_from + max_count - count]
+                    count += len(field_data_tail) + start_index
                     
                 for j, field_data_element in enumerate(field_data_tail):
-                    if(count < start_from):
-                        count += 1
-                        continue
-                    elif(max_count > 0 and count - start_from >= max_count):
-                        raise BreakIt('BreakIt: Fields Successfully Loaded')
-                    print(i, j, count)
-                    count = count + 1
+                    print('i =', i, ', j =', j, ', count = ', count)
+                    # continue
                     entity_type = field_data_element[field_data_header.index('entity_type')]
                     entity_id = field_data_element[field_data_header.index('entity_id')]
 
