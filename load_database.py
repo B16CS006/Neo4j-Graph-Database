@@ -415,4 +415,81 @@ class DatabaseHandler(object):
             '\t'*indent + '\tattributes: "' + x[header.index(fieldname + '_attributes')].replace('"', '\\"') + '"\n' + \
             '\t'*indent + '})'
         return statement
+
+    def field_number_decimal_structure(self, header, x, fieldname, indent=0):
+        statement = \
+            '\t'*indent + 'MERGE (y :number_decimal{\n' + \
+            '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tbundle: "' + x[header.index('bundle')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdeleted: toInteger("' + x[header.index('deleted')] + '"),\n' + \
+            '\t'*indent + '\tentity_id: toInteger("' + x[header.index('entity_id')] + '"),\n' + \
+            '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
+            '\t'*indent + '\tlanguage: "' + x[header.index('language')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
+            '\t'*indent + '\tvalue: toFloat("' + x[header.index(fieldname+'_value')] + '")\n' + \
+            '\t'*indent + '})'
+        return statement
+
+    def field_datetime_structure(self, header, x, fieldname, indent=0):
+        statement = \
+            '\t'*indent + 'MERGE (y :datetime{\n' + \
+            '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tbundle: "' + x[header.index('bundle')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdeleted: toInteger("' + x[header.index('deleted')] + '"),\n' + \
+            '\t'*indent + '\tentity_id: toInteger("' + x[header.index('entity_id')] + '"),\n' + \
+            '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
+            '\t'*indent + '\tlanguage: "' + x[header.index('language')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
+            '\t'*indent + '\tvalue: "' + x[header.index(fieldname + '_value')].replace('"', '\\"') + '"\n' + \
+            '\t'*indent + '})'
+        return statement
+
+    def field_file_structure(self, header, x, fieldname, indent=0):
+        statement = \
+            '\t'*indent + 'MERGE (y :file{\n' + \
+            '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tbundle: "' + x[header.index('bundle')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdeleted: toInteger("' + x[header.index('deleted')] + '"),\n' + \
+            '\t'*indent + '\tentity_id: toInteger("' + x[header.index('entity_id')] + '"),\n' + \
+            '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
+            '\t'*indent + '\tlanguage: "' + x[header.index('language')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
+            '\t'*indent + '\tfid: toInteger("' + x[header.index(fieldname + '_fid')] + '"),\n' + \
+            '\t'*indent + '\tdisplay: toFloat("' + x[header.index(fieldname + '_display')] + '"),\n' + \
+            '\t'*indent + '\tdescription: "' + x[header.index(fieldname + '_description')].replace('"', '\\"') + '"\n' + \
+            '\t'*indent + '})'
+        return statement
+
+    def field_list_boolean_structure(self, header, x, fieldname, indent=0):
+        statement = \
+            '\t'*indent + 'MERGE (y :list_boolean{\n' + \
+            '\t'*indent + '\tentity_type: "' + x[header.index('entity_type')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tbundle: "' + x[header.index('bundle')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdeleted: toInteger("' + x[header.index('deleted')] + '"),\n' + \
+            '\t'*indent + '\tentity_id: toInteger("' + x[header.index('entity_id')] + '"),\n' + \
+            '\t'*indent + '\trevision_id: toInteger("' + x[header.index('revision_id')] + '"),\n' + \
+            '\t'*indent + '\tlanguage: "' + x[header.index('language')].replace('"', '\\"') + '",\n' + \
+            '\t'*indent + '\tdelta: toInteger("' + x[header.index('delta')] + '"),\n' + \
+            '\t'*indent + '\tvalue: toInteger("' + x[header.index(fieldname+'_value')] + '")\n' + \
+            '\t'*indent + '})'
+        return statement
     
+###############################################################################################################################
+# '''
+#     "number_decimal"    TODO
+#     "entityreference"
+#     "field_collection"
+#     "taxonomy_term_reference"
+#     "email"
+#     "text"
+#     "image"
+#     "link_field"
+#     "geofield"
+#     "datetime"      TODO
+#     "text_long"
+#     "file"          TODO
+#     "mobile_number"
+#     "number_integer"
+#     "text_with_summary"
+#     "list_boolean"  TODO
+# '''
