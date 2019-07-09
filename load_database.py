@@ -1,8 +1,5 @@
 from neo4j import GraphDatabase
 
-class BreakIt(Exception):
-    pass
-
 class DatabaseHandler(object):
     def __init__(self, uri, user, password, dir='../database/ngov2/'):
         self.__change_dir__(dir)
@@ -134,9 +131,27 @@ class DatabaseHandler(object):
             print(e)
         return False
 
-    def csv_load_fields(self, start_from=0, max_count=-1, indent=0):
+    def csv_load_fields(self, start_from=0, max_count=-1, indent=0, operation_to_perform = 0):
+        '''This function first create required statement like
+            Create/Match nodes and then link ContentType/EntityType/TaxonomyTerm nodes with its respecting fields nodes
+            and finally Execute this statement.
+
+            operation_to_perform = 0 => execute statements
+            operation_to_perform = 1 => return statements list
+            operation_to_perform = 2 => both return statements list and execute statement
+
+            start_from = 2 => skip 0, 1 statement and start loop from 2
+            max_count = some_number 10(say) => return the function after running(executing) 10 statements
+            max_count = negative number -1(say) => execute(run) all statements
+
+            indent: it is uses form indentation purpose
+            indent = 2 => each line of statement is append with 2 tabs
+        '''
         try:
             field_config_header, field_config_tail = self.return_head_tail('field_config')
+            if operation_to_perform:
+                '''We want to return'''
+                statements = []
             count = 0
             for i, field_config_element in enumerate(field_config_tail):
                 field_name = field_config_element[field_config_header.index('field_name')]
@@ -182,12 +197,20 @@ class DatabaseHandler(object):
                     statement = statement + ') = toInteger("' + entity_id + '")\nWITH n\n' + \
                         getattr(self, function_name)(field_data_header, field_data_element, field_name, indent) + '\n' + \
                         'MERGE (n)-[:' + field_name + ']->(y)'
-                    self._write_transaction_(statement)
-            print('Fields Successfully Loaded')
-            return True
-        except BreakIt as e:
-            print(e)
-            return True
+
+                    if operation_to_perform == 2:
+                        self._write_transaction_(statement)
+                        statements.append([statement])
+                    elif operation_to_perform == 1:
+                        statements.append([statement])
+                    else:
+                        self._write_transaction_(statement)
+
+            print('Operation Completed on Fields')
+            if operation_to_perform :
+                return statements
+            else:
+                return True
         except Exception as e:
             print(e)
         return False
